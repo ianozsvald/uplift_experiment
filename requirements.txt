@@ -3,8 +3,8 @@ jupyter
 matplotlib 
 pandera
 pytest
-pytest-cov
-nbdime 
+#pytest-cov
+#nbdime 
 black[jupyter]
 nbqa
 flake8
