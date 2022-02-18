@@ -1,6 +1,21 @@
 import numpy as np
 import pandas as pd
 
+marketing_props = {
+    "uplift_train": 0.5,
+    "uplift_test": 0.5,
+    "uplift_val": 1.0,
+    "churn_train": 0.0, # market to 0%
+    "churn_test": 0.0, # market to 0%
+    #"churn_train": 1.0, # market 100%
+    #"churn_test": 1.0, # market 100% 
+    #"churn_train": 0.5, # market 50%
+    #"churn_test": 0.5, # market 50% 
+    "churn_val": 1.0,
+}
+BASE_CHURN = 0.16  # 16% churn means 84% retention
+
+
 def summarise_groups_pretty(styler, title):
     styler.set_caption(title)
     # styler.format(rain_condition)
@@ -19,26 +34,27 @@ def make_ppl(nbr_rows, base_churn, seed=0):
     ppl = pd.DataFrame(
         {
             "brand_loyal": rng.binomial(
-                1, 0.25, nbr_rows
+                1, 0.1, nbr_rows
             ),  # True if they just love to renew
             "bad_exp": rng.binomial(
-                1, 0.25, nbr_rows
+                1, 0.00, nbr_rows
             ),  # True if they had a bad experience with company
             "mkt_neg": rng.binomial(
-                1, 0.25, nbr_rows
+                1, 0.0, nbr_rows
             ),  # True if receiving marketing will increase churn probability for them
             "mkt_pos": rng.binomial(
-                1, 0.25, nbr_rows
+                1, 0.0, nbr_rows
             ),  # True if marketing helps retain this customer
         }
     )
-    # ppl["prob_churn"] = BASE_CHURN  # # a reasonably standard churn rate
-    ppl["prob_churn"] = rng.uniform(base_churn - 0.02, base_churn + 0.02, nbr_rows)
+    ppl["prob_churn"] = base_churn  # # a reasonably standard churn rate
+    #ppl["prob_churn"] = rng.uniform(base_churn - 0.02, base_churn + 0.02, nbr_rows) # TODO
     return ppl
 
-def determine_churners(ppl, marketing_prop, seed=0):
+def determine_churners(ppl, marketing_prop, seed=1):
     """People churn based the marketing_prop==[0.0, 1.0] who receive marketing,
     1.0 means all get it, 0 means none, 0.5 means half"""
+    print(f"determine_churners on {ppl.shape[0]} rows with marketing_prop {marketing_prop:0.2f}")
     ppl = ppl.copy()
     rng = np.random.default_rng(seed=seed)
     nbr_rows = ppl.shape[0]
@@ -48,50 +64,25 @@ def determine_churners(ppl, marketing_prop, seed=0):
     ppl["gets_mkting"] = rng.binomial(1, marketing_prop, nbr_rows)
     # people who like marketing and who get marketing have a lower chance of churning
     mask_mkt_pos = (ppl["mkt_pos"] & ppl["gets_mkting"]) == 1  # trues are 1s (ints)
-    ppl.loc[mask_mkt_pos, "prob_churn"] -= 0.1
-
+    ppl.loc[mask_mkt_pos, "prob_churn"] -= 0.05 
+    
     # people who hate marketing and who get marketing have a higher chance of churning
     mask_mkt_neg = (ppl["mkt_neg"] & ppl["gets_mkting"]) == 1  # trues are 1s (ints)
-    ppl.loc[mask_mkt_neg, "prob_churn"] += 0.1  
+    ppl.loc[mask_mkt_neg, "prob_churn"] += 0.05
 
     # people who have had a negative experience have a higher chance of churn
     mask_bad_exp = ppl["bad_exp"] == 1
-    ppl.loc[mask_bad_exp, "prob_churn"] += 0.2
+    ppl.loc[mask_bad_exp, "prob_churn"] += 0.05
 
     # people who like the brand experience have a lower chance of churn
     mask_brand_loyal = ppl["brand_loyal"] == 1
-    ppl.loc[mask_brand_loyal, "prob_churn"] -= 0.2
+    ppl.loc[mask_brand_loyal, "prob_churn"] -= 0.05
 
     ppl["prob_churn"] = ppl["prob_churn"].clip(lower=0, upper=1)
-    ppl["will_churn"] = rng.binomial(1, ppl["prob_churn"], ppl.shape[0])
-    return ppl
-
-def determine_churnersUPLIFT_OLD(ppl, marketing_prop, seed=0):
-    """People churn based the marketing_prop==[0.0, 1.0] who receive marketing,
-    1.0 means all get it, 0 means none, 0.5 means half"""
-    ppl = ppl.copy()
-    rng = np.random.default_rng(seed=seed)
-    nbr_rows = ppl.shape[0]
-    assert (
-        marketing_prop >= 0 and marketing_prop <= 1.0
-    ), "Must be [0, 1] as a proportion"
-    ppl["gets_mkting"] = rng.binomial(1, marketing_prop, nbr_rows)
-    # people who like marketing and who get marketing have a lower chance of churning
-    mask_mkt_pos = (ppl["mkt_pos"] & ppl["gets_mkting"]) == 1  # trues are 1s (ints)
-    ppl.loc[mask_mkt_pos, "prob_churn"] -= 0.1
-
-    # people who hate marketing and who get marketing have a higher chance of churning
-    mask_mkt_neg = (ppl["mkt_neg"] & ppl["gets_mkting"]) == 1  # trues are 1s (ints)
-    ppl.loc[mask_mkt_neg, "prob_churn"] += 0.1
-
-    # people who have had a negative experience have a higher chance of churn
-    mask_bad_exp = ppl["bad_exp"] == 1
-    ppl.loc[mask_bad_exp, "prob_churn"] += 0.2
-
-    # people who like the brand experience have a lower chance of churn
-    mask_brand_loyal = ppl["brand_loyal"] == 1
-    ppl.loc[mask_brand_loyal, "prob_churn"] -= 0.2
-
-    ppl["prob_churn"] = ppl["prob_churn"].clip(lower=0, upper=1)
-    ppl["will_churn"] = rng.binomial(1, ppl["prob_churn"], ppl.shape[0])
+    #ppl["will_churn"] = rng.binomial(1, ppl["prob_churn"].to_numpy(), ppl.shape[0]) # TODO
+    #probabilities =  ppl["prob_churn"].to_numpy()
+    #ppl["will_churn2"] = rng.binomial(1, probabilities, probabilities.shape[0]) # buggy
+    #ppl["will_churn3"] = rng.binomial(1, probabilities) # buggy
+    #ppl['will_churn'] = ppl['prob_churn'].apply(lambda p: int(rng.binomial(1, p, 1)[0])) # works seed 1 or 2, 0 causes bug
+    ppl['will_churn'] = ppl['prob_churn'].apply(lambda p: rng.binomial(1, p)) # works seed 1, 0 causes bug
     return ppl
