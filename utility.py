@@ -34,16 +34,16 @@ def make_ppl(nbr_rows, base_churn, seed=0):
     ppl = pd.DataFrame(
         {
             "brand_loyal": rng.binomial(
-                1, 0.1, nbr_rows
+                1, 0.2, nbr_rows
             ),  # True if they just love to renew
             "bad_exp": rng.binomial(
-                1, 0.00, nbr_rows
+                1, 0.2, nbr_rows
             ),  # True if they had a bad experience with company
             "mkt_neg": rng.binomial(
-                1, 0.0, nbr_rows
+                1, 0.2, nbr_rows
             ),  # True if receiving marketing will increase churn probability for them
             "mkt_pos": rng.binomial(
-                1, 0.0, nbr_rows
+                1, 0.2, nbr_rows
             ),  # True if marketing helps retain this customer
         }
     )
@@ -51,9 +51,17 @@ def make_ppl(nbr_rows, base_churn, seed=0):
     #ppl["prob_churn"] = rng.uniform(base_churn - 0.02, base_churn + 0.02, nbr_rows) # TODO
     return ppl
 
+# if seed==0 and we generate ppl_train with 50k samples, some groups go high to
+# a mean of 1 (e.g. if brand_loyal==1 (regardless of bad_exp), and the brand_loyal==0
+# group gets a strangely low mean. churn_prob is fine but the generated binomial
+# distribution just looks very wrong. 
+# by using a seed=1 or seed=2 we get the expected results so I'm sticking with 1
+# might be related to https://github.com/numpy/numpy/issues/18997 ?
+
 def determine_churners(ppl, marketing_prop, seed=1):
     """People churn based the marketing_prop==[0.0, 1.0] who receive marketing,
     1.0 means all get it, 0 means none, 0.5 means half"""
+    assert seed > 0, "If seed is 0 we get weird binomial distribution!"
     print(f"determine_churners on {ppl.shape[0]} rows with marketing_prop {marketing_prop:0.2f}")
     ppl = ppl.copy()
     rng = np.random.default_rng(seed=seed)
