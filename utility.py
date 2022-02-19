@@ -30,7 +30,7 @@ def summarise_groups_pretty(styler, title):
 # this increases their likelihood of churn
 # mkt_neg means they really don't like getting marketing and this will increase their likelihood of churn
 # gets_mkting is a 50/50 split for Treatment (True) or Control (False)
-def make_ppl(nbr_rows, base_churn, seed=0):
+def make_ppl(nbr_rows, base_churn, seed=1):
     rng = np.random.default_rng(seed=seed)
     ppl = pd.DataFrame(
         {
@@ -61,7 +61,7 @@ def make_ppl(nbr_rows, base_churn, seed=0):
 # might be related to https://github.com/numpy/numpy/issues/18997 ?
 
 
-def determine_churners(ppl, marketing_prop, seed=1):
+def determine_churners(ppl, marketing_prop, seed=2):
     """People churn based the marketing_prop==[0.0, 1.0] who receive marketing,
     1.0 means all get it, 0 means none, 0.5 means half"""
     assert seed > 0, "If seed is 0 we get weird binomial distribution!"
