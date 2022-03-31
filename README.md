@@ -7,7 +7,8 @@ An Uplift model will "save" more people, it can identify who responds positively
 
 # Building the models
 
-* Run `make_churn_data.ipynb` (writing `df_comparison_churn.pickle`, `df_comparison_dummy.pickle`) and `make_uplift_data.ipynb` (writing `df_comparison_uplift.pickle`)
+* Run `make_churn_data.ipynb` (writing `df_comparison_churn.pickle`, `df_comparison_dummy.pickle`)
+* Run`make_uplift_data.ipynb` (writing `df_comparison_uplift.pickle`)
 * Run `make_plots.ipynb`
 
 ```

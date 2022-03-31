@@ -35,16 +35,16 @@ def make_ppl(nbr_rows, base_churn, seed=1):
     ppl = pd.DataFrame(
         {
             "brand_loyal": rng.binomial(
-                1, 0.2, nbr_rows
+                1, 0.05, nbr_rows
             ),  # True if they just love to renew
             "bad_exp": rng.binomial(
                 1, 0.2, nbr_rows
             ),  # True if they had a bad experience with company
             "mkt_neg": rng.binomial(
-                1, 0.2, nbr_rows
+                1, 0.1, nbr_rows
             ),  # True if receiving marketing will increase churn probability for them
             "mkt_pos": rng.binomial(
-                1, 0.2, nbr_rows
+                1, 0.1, nbr_rows
             ),  # True if marketing helps retain this customer
         }
     )
